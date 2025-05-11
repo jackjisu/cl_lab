@@ -1,3 +1,4 @@
+import re
 # -------- Step 1: Read and shuffle the data --------
 
 def read_data(file_path):
@@ -10,29 +11,23 @@ def read_data(file_path):
             parts = line.split()
             label = parts[0]
             text = ' '.join(parts[1:])
+            text = re.sub(r';', ' ', text)
+            text = re.sub(r'[^\w\s]', '', text)
             data.append((text, label))
     return data
 
 # File paths
-train_file = './data/menu_train.txt'
-dev_file = './data/menu_dev.txt'
-test_file = './data/menu_test.txt'
+train_file = '/Users/jackbyun/Documents/cl_lab/restaurants/menu_train.txt'
 
 # Read and shuffle data
 train_data = read_data(train_file)
-dev_data = read_data(dev_file)
-test_data = read_data(test_file)
-
-
-# Combine train and dev
-full_train_data = train_data + dev_data
 
 # -------- Step 2: Build vocabulary from training data --------
 vocab = {}
-for text, _ in full_train_data:
+for text, _ in train_data:
     for word in text.lower().split():
         if word not in vocab:
-            vocab[word] = len(vocab)
+            vocab[word] = len(vocab) # give each word a unique index
 
 # -------- Step 3: Convert text to Bag-of-Words vector --------
 def text_to_vector(text):
@@ -47,19 +42,14 @@ def text_to_vector(text):
 # Step 4.1: Map string labels to integers
 label_to_index = {}
 current_index = 0
-for _, label in full_train_data + test_data:
+for _, label in train_data:
     if label not in label_to_index:
         label_to_index[label] = current_index
         current_index += 1
 
 # Step 4.2: Create feature vectors and integer labels
-X_train = [text_to_vector(text) for text, label in full_train_data]
-y_train = [label_to_index[label] for _, label in full_train_data]
-
-X_test = [text_to_vector(text) for text, label in test_data]
-y_test = [label_to_index[label] for _, label in test_data]
-print(y_test[10])
-print(X_test[10])
+X_train = [text_to_vector(text) for text, label in train_data]
+y_train = [label_to_index[label] for _, label in train_data]
 
 
 # -------- Step 5: Define Perceptron class --------
@@ -85,11 +75,11 @@ class Perceptron:
         return [1 if self.predict_raw(xi) >= 0 else -1 for xi in X]
 
 # -------- Step 6: Train and evaluate Perceptron --------
-perceptron = Perceptron(eta=0.1, n_iter=10)
-perceptron.fit(X_train, y_train)
-y_pred = perceptron.predict(X_test)
+#perceptron = Perceptron(eta=0.1, n_iter=10)
+#perceptron.fit(X_train, y_train)
+#y_pred = perceptron.predict(X_test)
 
 # -------- Step 7: Evaluate Accuracy --------
-correct = sum(1 for yp, yt in zip(y_pred, y_test) if yp == yt)
-accuracy = correct / len(y_test) * 100
-print("Accuracy:", round(accuracy, 2), "%")
+#correct = sum(1 for yp, yt in zip(y_pred, y_test) if yp == yt)
+#accuracy = correct / len(y_test) * 100
+#print("Accuracy:", round(accuracy, 2), "%")
